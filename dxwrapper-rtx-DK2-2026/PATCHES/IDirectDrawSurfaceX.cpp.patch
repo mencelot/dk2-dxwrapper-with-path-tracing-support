@@ -1,0 +1,101 @@
+diff --git a/ddraw/IDirectDrawSurfaceX.cpp b/ddraw/IDirectDrawSurfaceX.cpp
+index a5f68b61..983300d9 100644
+--- a/ddraw/IDirectDrawSurfaceX.cpp
++++ b/ddraw/IDirectDrawSurfaceX.cpp
+@@ -34,6 +34,26 @@ namespace {
+ 	// Used for sharing emulated memory
+ 	bool ShareEmulatedMemory = false;
+ 	std::vector<EMUSURFACE*> memorySurfaces;
++
++	// Lock/Unlock tracking for RTX Remix texture atlas analysis
++	struct LockInfo {
++		void* surface;
++		DWORD width;
++		DWORD height;
++		DWORD flags;
++		bool isWriteLock;
++	};
++
++	struct SurfaceLockStats {
++		DWORD lockCount = 0;
++		DWORD writeLockCount = 0;
++		DWORD width = 0;
++		DWORD height = 0;
++		std::vector<LockInfo> recentLocks;
++	};
++
++	std::unordered_map<void*, SurfaceLockStats> lockTrackingMap;
++	DWORD lockTrackingFrame = 0;
+ }
+ 
+ // ******************************
+@@ -2604,6 +2624,22 @@ HRESULT m_IDirectDrawSurfaceX::Lock2(LPRECT lpDestRect, LPDDSURFACEDESC2 lpDDSur
+ 			" Timing = " << Logging::GetTimeLapseInMS(startTime);
+ #endif
+ 
++		// Track Lock operations for atlas detection
++		if (Config.DdrawLogTextureAtlas && SUCCEEDED(hr))
++		{
++			SurfaceLockStats& stats = lockTrackingMap[this];
++			stats.lockCount++;
++			stats.width = surfaceDesc2.dwWidth;
++			stats.height = surfaceDesc2.dwHeight;
++
++			// Check if this is a write lock (not read-only)
++			bool isWriteLock = !(dwFlags & DDLOCK_READONLY);
++			if (isWriteLock)
++			{
++				stats.writeLockCount++;
++			}
++		}
++
+ 		return hr;
+ 	}
+ 
+@@ -8718,3 +8754,46 @@ void m_IDirectDrawSurfaceX::CleanupDummySurface()
+ {
+ 	dummySurface.clear();
+ }
++
++void m_IDirectDrawSurfaceX::LogAtlasTrackingAndReset()
++{
++	if (!Config.DdrawLogTextureAtlas)
++	{
++		return;
++	}
++
++	// Increment frame counter
++	lockTrackingFrame++;
++
++	// Only log every 60 frames to reduce spam
++	if (lockTrackingFrame % 60 != 0)
++	{
++		lockTrackingMap.clear();
++		return;
++	}
++
++	if (lockTrackingMap.empty())
++	{
++		Logging::Log() << "=== LOCK TRACKING FRAME " << lockTrackingFrame << " === (no locks)";
++		return;
++	}
++
++	Logging::Log() << "=== LOCK TRACKING FRAME " << lockTrackingFrame << " ===";
++
++	// Find surfaces with high lock counts (likely atlases being written to)
++	for (const auto& pair : lockTrackingMap)
++	{
++		const SurfaceLockStats& stats = pair.second;
++
++		// Log surfaces with write locks (potential atlas targets)
++		Logging::Log() << "SURFACE: " << pair.first
++			<< " size=" << stats.width << "x" << stats.height
++			<< " lockCount=" << stats.lockCount
++			<< " writeLocks=" << stats.writeLockCount;
++	}
++
++	Logging::Log() << "=== END LOCK TRACKING ===";
++
++	// Reset tracking for next frame
++	lockTrackingMap.clear();
++}

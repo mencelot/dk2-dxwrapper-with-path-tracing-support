@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  UseMultiToolTask: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [Workflow]
+        platform: [Win32, x64]
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+    - uses: microsoft/setup-msbuild@v1
+    - uses: Trass3r/setup-cpp@master
+    - name: Build
+      run: msbuild /m /p:Configuration=${{ matrix.config }} /p:Platform=${{ matrix.platform }} dinputto8.sln
+    - uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.config }} ${{ matrix.platform }} binaries
+        path: |
+          bin/${{ matrix.platform }}/${{ matrix.config }}/*

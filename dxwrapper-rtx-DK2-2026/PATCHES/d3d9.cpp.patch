@@ -1,0 +1,30 @@
+diff --git a/d3d9/d3d9.cpp b/d3d9/d3d9.cpp
+index 9bf72457..15455733 100644
+--- a/d3d9/d3d9.cpp
++++ b/d3d9/d3d9.cpp
+@@ -28,13 +28,20 @@ static HMODULE GetSystemD3d9()
+ {
+ 	static HMODULE h_d3d9 = nullptr;
+ 
+-	// Get System d3d9.dll
++	// Get d3d9.dll - prefer already loaded (RTX Remix) over system
+ 	if (!h_d3d9)
+ 	{
+-		char Path[MAX_PATH] = {};
+-		GetSystemDirectoryA(Path, MAX_PATH);
+-		strcat_s(Path, "\\d3d9.dll");
+-		GetModuleHandleExA(NULL, Path, &h_d3d9);
++		// First try to get already loaded d3d9.dll (RTX Remix if present)
++		GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, "d3d9.dll", &h_d3d9);
++
++		// Fall back to system d3d9.dll if not found
++		if (!h_d3d9)
++		{
++			char Path[MAX_PATH] = {};
++			GetSystemDirectoryA(Path, MAX_PATH);
++			strcat_s(Path, "\\d3d9.dll");
++			GetModuleHandleExA(NULL, Path, &h_d3d9);
++		}
+ 	}
+ 
+ 	return h_d3d9;

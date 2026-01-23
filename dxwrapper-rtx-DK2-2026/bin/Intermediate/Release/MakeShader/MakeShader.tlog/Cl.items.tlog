@@ -1,0 +1,10 @@
+C:\Users\Alex\Desktop\Dungeon Keeper 2\dxwrapper-rtx-DK2-2025\External\Hooking\Disasm.cpp;C:\Users\Alex\Desktop\Dungeon Keeper 2\dxwrapper-rtx-DK2-2025\bin\Intermediate\Release\External\Hooking\Disasm.obj
+C:\Users\Alex\Desktop\Dungeon Keeper 2\dxwrapper-rtx-DK2-2025\External\Hooking\Hook.cpp;C:\Users\Alex\Desktop\Dungeon Keeper 2\dxwrapper-rtx-DK2-2025\bin\Intermediate\Release\External\Hooking\Hook.obj
+C:\Users\Alex\Desktop\Dungeon Keeper 2\dxwrapper-rtx-DK2-2025\External\Hooking\HotPatch.cpp;C:\Users\Alex\Desktop\Dungeon Keeper 2\dxwrapper-rtx-DK2-2025\bin\Intermediate\Release\External\Hooking\HotPatch.obj
+C:\Users\Alex\Desktop\Dungeon Keeper 2\dxwrapper-rtx-DK2-2025\Libraries\d3dx9.cpp;C:\Users\Alex\Desktop\Dungeon Keeper 2\dxwrapper-rtx-DK2-2025\bin\Intermediate\Release\Libraries\d3dx9.obj
+C:\Users\Alex\Desktop\Dungeon Keeper 2\dxwrapper-rtx-DK2-2025\Libraries\winmm.cpp;C:\Users\Alex\Desktop\Dungeon Keeper 2\dxwrapper-rtx-DK2-2025\bin\Intermediate\Release\Libraries\winmm.obj
+C:\Users\Alex\Desktop\Dungeon Keeper 2\dxwrapper-rtx-DK2-2025\Utils\CPUAffinity.cpp;C:\Users\Alex\Desktop\Dungeon Keeper 2\dxwrapper-rtx-DK2-2025\bin\Intermediate\Release\Utils\CPUAffinity.obj
+C:\Users\Alex\Desktop\Dungeon Keeper 2\dxwrapper-rtx-DK2-2025\Utils\MemoryModule.cpp;C:\Users\Alex\Desktop\Dungeon Keeper 2\dxwrapper-rtx-DK2-2025\bin\Intermediate\Release\Utils\MemoryModule.obj
+C:\Users\Alex\Desktop\Dungeon Keeper 2\dxwrapper-rtx-DK2-2025\Utils\MyStrings.cpp;C:\Users\Alex\Desktop\Dungeon Keeper 2\dxwrapper-rtx-DK2-2025\bin\Intermediate\Release\Utils\MyStrings.obj
+C:\Users\Alex\Desktop\Dungeon Keeper 2\dxwrapper-rtx-DK2-2025\Utils\Utils.cpp;C:\Users\Alex\Desktop\Dungeon Keeper 2\dxwrapper-rtx-DK2-2025\bin\Intermediate\Release\Utils\Utils.obj
+C:\Users\Alex\Desktop\Dungeon Keeper 2\dxwrapper-rtx-DK2-2025\MakeShader\MakeShader.cpp;C:\Users\Alex\Desktop\Dungeon Keeper 2\dxwrapper-rtx-DK2-2025\bin\Intermediate\Release\Object\MakeShader.obj

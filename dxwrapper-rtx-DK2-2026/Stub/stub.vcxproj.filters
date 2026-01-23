@@ -1,0 +1,142 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="stub.cpp" />
+    <ClCompile Include="..\Wrappers\wrapper.cpp">
+      <Filter>Wrappers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Settings\ReadParse.cpp">
+      <Filter>Settings</Filter>
+    </ClCompile>
+    <ClCompile Include="ddraw.cpp" />
+    <ClCompile Include="d3d8.cpp" />
+    <ClCompile Include="dinput.cpp" />
+    <ClCompile Include="..\External\Hooking\Hook.cpp">
+      <Filter>External\Hooking</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\Hooking\HotPatch.cpp">
+      <Filter>External\Hooking</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\Hooking\Disasm.cpp">
+      <Filter>External\Hooking</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Utils\MemoryModule.cpp">
+      <Filter>External\MemoryModule</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stub.h" />
+    <ClInclude Include="..\Wrappers\bcrypt.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\cryptsp.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\d2d1.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\d3d8.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\d3d9.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\dciman32.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\ddraw.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\dinput.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\dinput8.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\dplayx.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\dsound.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\msacm32.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\msvfw32.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\shared.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\winmm.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\wrapper.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="Logging\Logging.h">
+      <Filter>Logging</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\version.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\wininet.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\dwmapi.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\wsock32.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\Hooking\Hook.h">
+      <Filter>External\Hooking</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\MemoryModule\MemoryModule.h">
+      <Filter>External\MemoryModule</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\cryptbase.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\winspool.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\Hooking\Disasm.h">
+      <Filter>External\Hooking</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Wrappers\msvbvm60.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="stub.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Wrappers">
+      <UniqueIdentifier>{08889ae3-1b0c-4d13-be6e-4e15b2123c6e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Logging">
+      <UniqueIdentifier>{45e2f2d8-f49d-43e6-8fa0-10e67d6c4c44}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External">
+      <UniqueIdentifier>{ac9b3a4e-42c7-4885-a6b9-bc59b4f0f2ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\MemoryModule">
+      <UniqueIdentifier>{2f7a46f1-6e85-4522-818d-a3f736e9f0fa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Settings">
+      <UniqueIdentifier>{103ef3c8-ace8-4021-a1c2-130a38edf466}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\Hooking">
+      <UniqueIdentifier>{4b47871c-608b-4247-9c72-22e050ae3f4f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="stub.def">
+      <Filter>Wrappers</Filter>
+    </None>
+    <None Include="..\Settings\Stub.ini">
+      <Filter>Settings</Filter>
+    </None>
+  </ItemGroup>
+</Project>

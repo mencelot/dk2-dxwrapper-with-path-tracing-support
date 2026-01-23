@@ -1,0 +1,276 @@
+diff --git a/ddraw/IDirect3DDeviceX.cpp b/ddraw/IDirect3DDeviceX.cpp
+index ddae3905..7cd8968c 100644
+--- a/ddraw/IDirect3DDeviceX.cpp
++++ b/ddraw/IDirect3DDeviceX.cpp
+@@ -16,6 +16,7 @@
+ 
+ #include "ddraw.h"
+ #include "d3d9\d3d9External.h"
++#include "RemixAPI.h"
+ 
+ // ******************************
+ // IUnknown functions
+@@ -1294,6 +1295,65 @@ HRESULT m_IDirect3DDeviceX::BeginScene()
+ #endif
+ 
+ 			PrepDevice();
++
++			// Set 3D camera matrices at START of scene for RTX Remix camera detection
++			// Must be done BEFORE draw calls, as camera is detected during draw call processing
++			if (Config.DdrawConvertHomogeneousToWorld)
++			{
++				if (!ConvertHomogeneous.IsTransformViewSet)
++				{
++					// Game never called SetTransform(D3DTS_VIEW) - compute default camera matrices
++					D3DVIEWPORT9 vp;
++					(*d3d9Device)->GetViewport(&vp);
++					const float width = (float)vp.Width;
++					const float height = (float)vp.Height;
++					const float fov = Config.DdrawConvertHomogeneousToWorldFOV;
++					const float nearplane = Config.DdrawConvertHomogeneousToWorldNearPlane;
++					const float farplane = Config.DdrawConvertHomogeneousToWorldFarPlane;
++					const float ratio = width / height;
++
++					// Create projection matrix (perspective, NOT orthographic)
++					DirectX::XMMATRIX proj = DirectX::XMMatrixPerspectiveFovLH(
++						fov * (3.14159265359f / 180.0f), ratio, nearplane, farplane);
++					DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&ConvertHomogeneous.ToWorld_ProjectionMatrix, proj);
++
++					// Create view matrix - isometric camera looking down at 45 degrees
++					DirectX::XMVECTOR position = DirectX::XMVectorSet(0.0f, 800.0f, -800.0f, 0.0f);
++					DirectX::XMVECTOR direction = DirectX::XMVector3Normalize(
++						DirectX::XMVectorSet(0.0f, -0.707f, 0.707f, 0.0f));
++					DirectX::XMVECTOR upVector = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
++					DirectX::XMMATRIX viewMatrix = DirectX::XMMatrixLookToLH(position, direction, upVector);
++					DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&ConvertHomogeneous.ToWorld_ViewMatrix, viewMatrix);
++
++					// Create screen-to-NDC matrix (transforms screen coords 0-width,0-height to NDC -1 to 1)
++					// This is the same matrix used in SetTransform for XYZRHW handling
++					DirectX::XMMATRIX screenToNDC = DirectX::XMMatrixSet(
++						2.0f / width, 0.0f, 0.0f, 0.0f,
++						0.0f, -2.0f / height, 0.0f, 0.0f,
++						0.0f, 0.0f, 1.0f, 0.0f,
++						-1.0f, 1.0f, 0.0f, 1.0f
++					);
++
++					// Compute the inverse matrix for vertex transformation
++					// Full transform: screen -> NDC -> clip -> view -> world
++					DirectX::XMMATRIX vp_matrix = DirectX::XMMatrixMultiply(viewMatrix, proj);
++					DirectX::XMMATRIX vpinv = DirectX::XMMatrixInverse(nullptr, vp_matrix);
++					ConvertHomogeneous.ToWorld_ViewMatrixInverse = DirectX::XMMatrixMultiply(screenToNDC, vpinv);
++
++					ConvertHomogeneous.IsTransformViewSet = true;
++
++					static bool loggedDefault = false;
++					if (!loggedDefault)
++					{
++						Logging::Log() << __FUNCTION__ << " Initialized camera matrices in BeginScene (width=" << width << " height=" << height << ")";
++						loggedDefault = true;
++					}
++				}
++
++				// Set matrices via D3D9 BEFORE any draw calls
++				(*d3d9Device)->SetTransform(D3DTS_VIEW, &ConvertHomogeneous.ToWorld_ViewMatrix);
++				(*d3d9Device)->SetTransform(D3DTS_PROJECTION, &ConvertHomogeneous.ToWorld_ProjectionMatrix);
++			}
+ 		}
+ 
+ 		return hr;
+@@ -1335,6 +1395,22 @@ HRESULT m_IDirect3DDeviceX::EndScene()
+ 
+ 		ScopedCriticalSection ThreadLockDD(DdrawWrapper::GetDDCriticalSection());
+ 
++		// Note: Camera matrices are now set in BeginScene (before draw calls)
++		// The EndScene code below is kept for Remix API (may not work on 32-bit through bridge)
++		if (Config.DdrawConvertHomogeneousToWorld)
++		{
++			// Try Remix API if available
++			RemixAPIManager& remixApi = RemixAPIManager::Instance();
++			if (!remixApi.IsInitialized())
++			{
++				const char* initError = nullptr;
++				if (remixApi.Initialize(&initError))
++				{
++					Logging::Log() << __FUNCTION__ << " RTX Remix API initialized successfully";
++				}
++			}
++		}
++
+ 		HRESULT hr = (*d3d9Device)->EndScene();
+ 
+ #ifdef ENABLE_PROFILING
+@@ -1353,6 +1429,9 @@ HRESULT m_IDirect3DDeviceX::EndScene()
+ 			{
+ 				lpCurrentRenderTargetX->EndWritePresent(nullptr, false);
+ 			}
++
++			// Log atlas tracking at end of frame
++			m_IDirectDrawSurfaceX::LogAtlasTrackingAndReset();
+ 		}
+ 
+ 		return hr;
+@@ -2649,8 +2728,9 @@ HRESULT m_IDirect3DDeviceX::SetTransform(D3DTRANSFORMSTATETYPE dtstTransformStat
+ 						}
+ 						else
+ 						{
+-							position = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+-							direction = DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
++							// DK2 isometric camera - positioned above, looking down at ~45 degree angle
++							position = DirectX::XMVectorSet(0.0f, 800.0f, -800.0f, 0.0f);
++							direction = DirectX::XMVector3Normalize(DirectX::XMVectorSet(0.0f, -0.707f, 0.707f, 0.0f));
+ 						}
+ 
+ 						// Store the original matrix so it can be restored
+@@ -2862,6 +2942,90 @@ HRESULT m_IDirect3DDeviceX::DrawPrimitive(D3DPRIMITIVETYPE dptPrimitiveType, DWO
+ 		// Update vertices for Direct3D9 (needs to be first)
+ 		UpdateVertices(dwVertexTypeDesc, lpVertices, 0, dwVertexCount);
+ 
++		// Handle PositionT (pre-transformed vertices) - convert to world space for RTX Remix
++		if (Config.DdrawConvertHomogeneousW && (dwVertexTypeDesc & 0x0E) == D3DFVF_XYZRHW)
++		{
++			static bool loggedDrawPrimConversion = false;
++			if (!loggedDrawPrimConversion)
++			{
++				Logging::Log() << __FUNCTION__ << " Converting XYZRHW to world space (DrawPrimitive)";
++				loggedDrawPrimConversion = true;
++			}
++
++			if (!ConvertHomogeneous.IsTransformViewSet)
++			{
++				D3DMATRIX Matrix = {};
++				GetTransform(D3DTS_VIEW, &Matrix);
++				SetTransform(D3DTS_VIEW, &Matrix);
++			}
++
++			if (!Config.DdrawConvertHomogeneousToWorld)
++			{
++				// Update the FVF
++				dwVertexTypeDesc = (dwVertexTypeDesc & ~D3DFVF_XYZRHW) | D3DFVF_XYZW;
++			}
++			else
++			{
++				const UINT stride = GetVertexStride(dwVertexTypeDesc);
++				const UINT targetStride = stride - sizeof(float);
++				const UINT restSize = stride - sizeof(float) * 4;
++
++				ConvertHomogeneous.ToWorld_IntermediateGeometry.resize(targetStride * dwVertexCount);
++
++				UINT8* sourceVertex = (UINT8*)lpVertices;
++				UINT8* targetVertex = (UINT8*)ConvertHomogeneous.ToWorld_IntermediateGeometry.data();
++
++				lpVertices = targetVertex;
++
++				for (UINT x = 0; x < dwVertexCount; x++)
++				{
++					// Transform the vertices into world space
++					float* srcpos = (float*)sourceVertex;
++					float* trgtpos = (float*)targetVertex;
++
++					DirectX::XMVECTOR xpos = DirectX::XMVectorSet(srcpos[0], srcpos[1], srcpos[2], srcpos[3]);
++					DirectX::XMVECTOR xpos_global = DirectX::XMVector3TransformCoord(xpos, ConvertHomogeneous.ToWorld_ViewMatrixInverse);
++					xpos_global = DirectX::XMVectorDivide(xpos_global, DirectX::XMVectorSplatW(xpos_global));
++
++					trgtpos[0] = DirectX::XMVectorGetX(xpos_global);
++					trgtpos[1] = DirectX::XMVectorGetY(xpos_global);
++					trgtpos[2] = DirectX::XMVectorGetZ(xpos_global);
++
++					// Copy the rest
++					std::memcpy(targetVertex + sizeof(float) * 3, sourceVertex + sizeof(float) * 4, restSize);
++
++					// Move to next vertex
++					sourceVertex += stride;
++					targetVertex += targetStride;
++				}
++
++				// Set transform
++				(*d3d9Device)->SetTransform(D3DTS_VIEW, &ConvertHomogeneous.ToWorld_ViewMatrix);
++				(*d3d9Device)->SetTransform(D3DTS_PROJECTION, &ConvertHomogeneous.ToWorld_ProjectionMatrix);
++
++				// Update the FVF
++				const DWORD newVertexTypeDesc = (dwVertexTypeDesc & ~D3DFVF_XYZRHW) | D3DFVF_XYZ;
++
++				// Set fixed function vertex type
++				if (FAILED((*d3d9Device)->SetFVF(newVertexTypeDesc)))
++				{
++					LOG_LIMIT(100, __FUNCTION__ << " Error: invalid FVF type: " << Logging::hex(dwVertexTypeDesc));
++					return D3DERR_INVALIDVERTEXTYPE;
++				}
++
++				// Handle dwFlags
++				SetDrawStates(newVertexTypeDesc, dwFlags, DirectXVersion);
++
++				// Draw primitive UP
++				HRESULT hr = (*d3d9Device)->DrawPrimitiveUP(dptPrimitiveType, GetNumberOfPrimitives(dptPrimitiveType, dwVertexCount), lpVertices, targetStride);
++
++				// Handle dwFlags
++				RestoreDrawStates(hr, newVertexTypeDesc, dwFlags);
++
++				return hr;
++			}
++		}
++
+ 		// Set fixed function vertex type
+ 		if (FAILED((*d3d9Device)->SetFVF(dwVertexTypeDesc)))
+ 		{
+@@ -2958,6 +3122,20 @@ HRESULT m_IDirect3DDeviceX::DrawIndexedPrimitive(D3DPRIMITIVETYPE dptPrimitiveTy
+ 		// Handle PositionT
+ 		if (Config.DdrawConvertHomogeneousW && (dwVertexTypeDesc & 0x0E) == D3DFVF_XYZRHW)
+ 		{
++			static bool loggedDrawIndexedConversion = false;
++			if (!loggedDrawIndexedConversion)
++			{
++				Logging::Log() << __FUNCTION__ << " Converting XYZRHW to world space (DrawIndexedPrimitive)";
++				Logging::Log() << "  Projection matrix [0][0]=" << ConvertHomogeneous.ToWorld_ProjectionMatrix._11
++					<< " [1][1]=" << ConvertHomogeneous.ToWorld_ProjectionMatrix._22
++					<< " [2][2]=" << ConvertHomogeneous.ToWorld_ProjectionMatrix._33
++					<< " [3][3]=" << ConvertHomogeneous.ToWorld_ProjectionMatrix._44;
++				Logging::Log() << "  View matrix [3][0]=" << ConvertHomogeneous.ToWorld_ViewMatrix._41
++					<< " [3][1]=" << ConvertHomogeneous.ToWorld_ViewMatrix._42
++					<< " [3][2]=" << ConvertHomogeneous.ToWorld_ViewMatrix._43;
++				loggedDrawIndexedConversion = true;
++			}
++
+ 			if (!ConvertHomogeneous.IsTransformViewSet)
+ 			{
+ 				D3DMATRIX Matrix = {};
+@@ -3039,14 +3217,8 @@ HRESULT m_IDirect3DDeviceX::DrawIndexedPrimitive(D3DPRIMITIVETYPE dptPrimitiveTy
+ 				// Handle dwFlags
+ 				RestoreDrawStates(hr, newVertexTypeDesc, dwFlags);
+ 
+-				// Restore transform
+-				D3DMATRIX identityMatrix = {};
+-				identityMatrix._11 = 1.0f;
+-				identityMatrix._22 = 1.0f;
+-				identityMatrix._33 = 1.0f;
+-
+-				(*d3d9Device)->SetTransform(D3DTS_VIEW, &ConvertHomogeneous.ToWorld_ViewMatrixOriginal);
+-				(*d3d9Device)->SetTransform(D3DTS_PROJECTION, &identityMatrix);
++				// NOTE: Do NOT restore transform - keep 3D camera matrices set for RTX Remix detection
++				// The original code restored the matrices here which prevented RTX Remix from detecting the camera
+ 
+ 				return hr;
+ 			}
+@@ -4442,6 +4614,23 @@ HRESULT m_IDirect3DDeviceX::SetTexture(DWORD dwStage, LPDIRECTDRAWSURFACE7 lpSur
+ 		AttachedTexture[dwStage] = lpSurface;
+ 		CurrentTextureSurfaceX[dwStage] = lpDDSrcSurfaceX;
+ 
++		// Log SetTexture calls for atlas analysis
++		if (Config.DdrawLogTextureAtlas && lpDDSrcSurfaceX)
++		{
++			static DWORD setTextureLogCount = 0;
++			setTextureLogCount++;
++			// Log every 1000th call to avoid spam
++			if (setTextureLogCount % 1000 == 1)
++			{
++				DWORD texWidth = 0, texHeight = 0;
++				lpDDSrcSurfaceX->GetSurfaceSetSize(texWidth, texHeight);
++				Logging::Log() << "SETTEXTURE #" << setTextureLogCount
++					<< " stage=" << dwStage
++					<< " surface=" << lpDDSrcSurfaceX
++					<< " size=" << texWidth << "x" << texHeight;
++			}
++		}
++
+ 		return D3D_OK;
+ 	}
+ 

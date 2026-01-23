@@ -1,0 +1,29 @@
+diff --git a/Dllmain/Dllmain.cpp b/Dllmain/Dllmain.cpp
+index 0f57fe8a..ca380d98 100644
+--- a/Dllmain/Dllmain.cpp
++++ b/Dllmain/Dllmain.cpp
+@@ -93,7 +93,23 @@ static HMODULE LoadHookedDll(const char *dllname, LoadProc Load, DWORD HookSyste
+ 	HMODULE dll = Load(nullptr, Config.WrapperName.c_str());
+ 	HMODULE currentdll = GetModuleHandle(dllname);
+ 
+-	if (dllname && (Config.IsSet(HookSystem32) || (HookSystem32 == NOT_EXIST && currentdll && GetProcAddress(currentdll, "DxWrapperSettings") == nullptr)))
++	// Check if RTX Remix d3d9.dll is loaded (has Direct3DCreate9 but not DxWrapperSettings)
++	// If so, use it instead of loading from system32
++	bool isRTXRemix = false;
++	if (currentdll && _stricmp(dllname, "d3d9.dll") == 0)
++	{
++		// RTX Remix's d3d9.dll has Direct3DCreate9 but no DxWrapperSettings
++		if (GetProcAddress(currentdll, "Direct3DCreate9") != nullptr &&
++			GetProcAddress(currentdll, "DxWrapperSettings") == nullptr)
++		{
++			// Likely RTX Remix - use the already loaded d3d9.dll
++			isRTXRemix = true;
++			dll = currentdll;
++			Logging::Log() << "Using already loaded d3d9.dll (RTX Remix detected)";
++		}
++	}
++
++	if (!isRTXRemix && dllname && (Config.IsSet(HookSystem32) || (HookSystem32 == NOT_EXIST && currentdll && GetProcAddress(currentdll, "DxWrapperSettings") == nullptr)))
+ 	{
+ 		char path[MAX_PATH];
+ 		GetSystemDirectory(path, MAX_PATH);

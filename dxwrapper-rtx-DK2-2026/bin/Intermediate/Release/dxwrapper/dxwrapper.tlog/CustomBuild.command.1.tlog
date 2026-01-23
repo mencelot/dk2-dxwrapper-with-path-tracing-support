@@ -1,0 +1,8 @@
+^C:\USERS\ALEX\DESKTOP\DUNGEON KEEPER 2\DXWRAPPER-RTX-DK2-2025\DDRAW\SHADERS\COLORKEYPIXELSHADER.HLSL
+cmd /q /c "cd /D ""C:\Users\Alex\Desktop\Dungeon Keeper 2\dxwrapper-rtx-DK2-2025\ddraw\Shaders\"" && ""..\..\bin\MakeShader\MakeShader.exe"" ColorKeyPixelShader.hlsl main ps_2_0 ColorKeyPixelShaderSrc"
+^C:\USERS\ALEX\DESKTOP\DUNGEON KEEPER 2\DXWRAPPER-RTX-DK2-2025\DDRAW\SHADERS\PALETTEPIXELSHADER.HLSL
+cmd /q /c "cd /D ""C:\Users\Alex\Desktop\Dungeon Keeper 2\dxwrapper-rtx-DK2-2025\ddraw\Shaders\"" && ""..\..\bin\MakeShader\MakeShader.exe"" PalettePixelShader.hlsl main ps_2_0 PalettePixelShaderSrc"
+^C:\USERS\ALEX\DESKTOP\DUNGEON KEEPER 2\DXWRAPPER-RTX-DK2-2025\DDRAW\SHADERS\GAMMAPIXELSHADER.HLSL
+cmd /q /c "cd /D ""C:\Users\Alex\Desktop\Dungeon Keeper 2\dxwrapper-rtx-DK2-2025\ddraw\Shaders\"" && ""..\..\bin\MakeShader\MakeShader.exe"" GammaPixelShader.hlsl main ps_2_0 GammaPixelShaderSrc"
+^C:\USERS\ALEX\DESKTOP\DUNGEON KEEPER 2\DXWRAPPER-RTX-DK2-2025\DDRAW\SHADERS\FIXUPVERTEXSHADER.HLSL
+cmd /q /c "cd /D ""C:\Users\Alex\Desktop\Dungeon Keeper 2\dxwrapper-rtx-DK2-2025\ddraw\Shaders\"" && ""..\..\bin\MakeShader\MakeShader.exe"" FixUpVertexShader.hlsl main vs_2_0 FixUpVertexShaderSrc"

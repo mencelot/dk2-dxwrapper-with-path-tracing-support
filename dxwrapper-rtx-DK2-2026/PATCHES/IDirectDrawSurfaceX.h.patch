@@ -1,0 +1,12 @@
+diff --git a/ddraw/IDirectDrawSurfaceX.h b/ddraw/IDirectDrawSurfaceX.h
+index 90e91336..2014573d 100644
+--- a/ddraw/IDirectDrawSurfaceX.h
++++ b/ddraw/IDirectDrawSurfaceX.h
+@@ -588,4 +588,7 @@ public:
+ 	static void CleanupSharedEmulatedMemory();
+ 	static void SizeDummySurface(size_t size);
+ 	static void CleanupDummySurface();
++
++	// Atlas tracking for RTX Remix
++	static void LogAtlasTrackingAndReset();
+ };
