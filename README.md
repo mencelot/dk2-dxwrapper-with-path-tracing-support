@@ -286,6 +286,7 @@ Copy the built `dxwrapper.dll` to your Dungeon Keeper 2 game directory alongside
 
 - [dxwrapper](https://github.com/elishacloud/dxwrapper) by elishacloud - the DirectX wrapper this is built on
 - [dkollmann's fork](https://github.com/dkollmann/dxwrapper) - added the initial XYZRHW conversion framework (2023)
+- [trass3r](https://github.com/trass3r) - contributions to the project
 - [NVIDIA RTX Remix](https://github.com/NVIDIAGameWorks/rtx-remix) - the path tracing runtime
 
 ---
